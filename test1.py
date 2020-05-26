@@ -28,15 +28,6 @@ class DumpLog:
         return third_dict
 
 
-#        if len(self.next_hop) == 2:
-#            if self.next_hop[0] == key:
-#                third_dict = {"preference": self.preference, "age": self.age, "metric": self.metric, "via": self.via[0]}
-#            elif self.next_hop[1] == key:
-#                third_dict = {"preference": self.preference, "age": self.age, "metric": self.metric, "via": self.via[1]}
-#        else:
-#            third_dict = {"preference": self.preference, "age": self.age, "metric": self.metric, "via": self.via[0]}
-#       return third_dict
-
 def parsing(collection_sample, file_name):
     """Log-file parsing, loading in memory string-by-string to avoid memory overload due to potential file size"""
     file_open = open(file_name, 'r')
