@@ -3,10 +3,9 @@ import sys
 
 
 class DumpLog:
-    """Docstring"""
-
+    """Class for collecting data from .log file"""
     def __init__(self, destination, protocol, age, metric):
-        """Constructor"""
+        """Constructor for basic data"""
         self.destination = destination
         self.protocol = protocol.strip('*[]')
         self.preference = int(protocol.split('/')[1].strip(']'))
@@ -16,10 +15,12 @@ class DumpLog:
         self.via = []
 
     def addition(self, next_hop, via):
+        """Method for list-type data to collect all log from file"""
         self.next_hop.append(next_hop)
         self.via.append(via)
 
     def map_out(self, key):
+        """json-like output for map"""
         third_dict = {}
         if len(self.next_hop) == 2:
             if self.next_hop[0] == key:
@@ -30,13 +31,9 @@ class DumpLog:
             third_dict = {"preference": self.preference, "age": self.age, "metric": self.metric, "via": self.via[0]}
         return third_dict
 
-    def output(self):
-        print(self.destination, self.preference, self.age, self.metric, sep=', ')
-        print(self.next_hop, self.via)
-        print("\n")
-
 
 def parsing(collection_sample, file_name):
+    """Log-file parsing, loading in memory string-by-string to avoid memory overload due to potential file size"""
     file_open = open(file_name, 'r')
     for line in file_open:
         parse = line.split()
@@ -50,14 +47,23 @@ def parsing(collection_sample, file_name):
     file_open.close()
 
 
-def to_dict(collection_sample, elem_index, key):
+def to_sec_dict(collection_sample, elem_index, key):
+    """Dictionary collecting for better json usage, because its works only with
+    default python collections, ads second map to first
+    Map view: keys -> 'destination', values -> other data"""
     sec_dict = {}
     for index in range(0, len(collection_sample)):
         for str_point in range(0, len(collection_sample[index].next_hop)):
             if collection_sample[index].next_hop[str_point] == collection_sample[elem_index].next_hop[0]:
                 sec_dict[collection_sample[index].destination] = collection_sample[index].map_out(key)
-        pass
     return sec_dict
+
+
+def to_first_dict(diction, dump):
+    """Creating first map, keys -> 'next_hop', values -> 'destination's"""
+    for i in range(0, len(dump)):
+        for j in range(0, len(dump[i].next_hop)):
+            diction[dump[i].next_hop[j]] = to_sec_dict(dump, i, dump[i].next_hop[j])
 
 
 if "__main__" == __name__:
@@ -66,9 +72,7 @@ if "__main__" == __name__:
         parsing(dump_coll, sys.argv[1])
         try:
             dictionary = {}
-            for i in range(0, len(dump_coll)):
-                for j in range(0, len(dump_coll[i].next_hop)):
-                    dictionary[dump_coll[i].next_hop[j]] = to_dict(dump_coll, i, dump_coll[i].next_hop[j])
+            to_first_dict(dictionary, dump_coll)
             r_t = {"route_table": {"next_hop": dictionary}}
             file_out = open(sys.argv[-1], 'w')
             json.dump(r_t, file_out, indent=2)
